@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
 import '../App.css'
-import '../labs.css'
 
 // Directory Traversal Lab - Safe, client-side simulation only
 const DEMO_FLAG = 'flag{directory_traversal_success}'

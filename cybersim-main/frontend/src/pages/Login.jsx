@@ -28,24 +28,28 @@ function Login() {
     setError('');
 
     try {
-      // Try to login with API
       const response = await authAPI.login(formData);
-      login(response.user, response.token);
+      
+      const userData = {
+        _id: response.data._id,
+        username: response.data.username,
+        email: response.data.email,
+        role: response.data.role,
+        points: response.data.points,
+        streak: response.data.streak,
+        achievements: response.data.achievements
+      };
+
+      login(userData, response.data.token);
       navigate('/dashboard');
-    } catch (error) {
-      // Fallback to demo login for development
-      if (formData.email && formData.password) {
-        const demoUser = {
-          id: 1,
-          username: formData.email.split('@')[0],
-          email: formData.email,
-          role: 'user'
-        };
-        const demoToken = 'demo-token-' + Date.now();
-        login(demoUser, demoToken);
-        navigate('/dashboard');
+    } catch (err) {
+      console.error('Login error:', err);
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.code === 'ERR_NETWORK') {
+        setError('Cannot connect to server. Please ensure the backend is running.');
       } else {
-        setError('Please fill in all fields');
+        setError('Login failed. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -62,7 +66,7 @@ function Login() {
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
-          {error && <div className="message error">{error}</div>}
+          {error && <div className="auth-message error">{error}</div>}
           
           <div className="form-group">
             <label htmlFor="email">Email Address</label>
@@ -90,31 +94,10 @@ function Login() {
             />
           </div>
 
-          <div className="form-footer">
-            <label className="checkbox-label">
-              <input type="checkbox" />
-              <span>Remember me</span>
-            </label>
-            <Link to="/forgot-password" className="link-text">Forgot password?</Link>
-          </div>
-
           <button type="submit" className="btn primary full-width" disabled={loading}>
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
-
-        <div className="auth-divider">
-          <span>or continue with</span>
-        </div>
-
-        <div className="social-login">
-          <button className="btn social-btn">
-            <span>🔷</span> Google
-          </button>
-          <button className="btn social-btn">
-            <span>⚫</span> GitHub
-          </button>
-        </div>
 
         <div className="auth-switch">
           Don't have an account? <Link to="/signup" className="link-text">Sign up</Link>

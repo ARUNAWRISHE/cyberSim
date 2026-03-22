@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import '../labs.css';
 
 const SystemHardeningLab = ({ onClose }) => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -7,7 +6,7 @@ const SystemHardeningLab = ({ onClose }) => {
   const [userInput, setUserInput] = useState('');
   const [score, setScore] = useState(0);
   const [labCompleted, setLabCompleted] = useState(false);
-  const [hints, setHints] = useState([]);
+  const [_hints] = useState([]);
 
   const steps = [
     {
@@ -80,7 +79,7 @@ const SystemHardeningLab = ({ onClose }) => {
       "",
       "Type your command below:"
     ]);
-  }, [currentStep]);
+  }, [currentStep, steps]);
 
   const handleCommand = (command) => {
     const currentStepData = steps[currentStep];

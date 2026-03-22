@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
 import '../App.css'
-import '../labs.css'
 
 // Command Injection Lab - Safe, client-side simulation only
 const DEMO_FLAG = 'flag{command_injection_complete}'

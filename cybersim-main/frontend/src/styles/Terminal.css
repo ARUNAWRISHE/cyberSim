@@ -1,0 +1,221 @@
+.terminal-container {
+  background: rgba(10, 14, 26, 0.95);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  border-radius: 12px;
+  overflow: hidden;
+  font-family: 'Courier New', Consolas, monospace;
+}
+
+.terminal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: rgba(26, 31, 46, 0.8);
+  border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.terminal-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.terminal-icon { font-size: 1.2rem; }
+
+.terminal-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.terminal-btn {
+  padding: 0.4rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.terminal-btn.hint-btn {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+.terminal-btn.hint-btn:hover {
+  background: rgba(245, 158, 11, 0.3);
+}
+
+.terminal-btn.flag-btn {
+  background: rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+}
+
+.terminal-btn.flag-btn:hover {
+  background: rgba(251, 191, 36, 0.3);
+}
+
+.terminal-btn.close-btn {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.terminal-btn.close-btn:hover {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+.hints-panel {
+  padding: 1rem;
+  background: rgba(245, 158, 11, 0.1);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.hints-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.hints-header button {
+  background: none;
+  border: none;
+  color: #f59e0b;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.hints-list {
+  margin-bottom: 0.75rem;
+}
+
+.hint-item {
+  padding: 0.5rem 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.hint-number {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.flag-submit-panel {
+  padding: 1rem;
+  background: rgba(251, 191, 36, 0.1);
+  border-bottom: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.flag-submit-panel form {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.flag-submit-panel input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  background: rgba(10, 14, 26, 0.8);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 6px;
+  color: #fbbf24;
+  font-family: inherit;
+}
+
+.flag-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.terminal-body {
+  padding: 1rem;
+  min-height: 300px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.terminal-line {
+  margin-bottom: 0.25rem;
+  line-height: 1.5;
+}
+
+.terminal-line.system { color: var(--muted); }
+.terminal-line.success { color: var(--success); }
+.terminal-line.error { color: var(--danger); }
+.terminal-line.warning { color: var(--warning); }
+.terminal-line.hint { color: #f59e0b; }
+.terminal-line.flag { color: #fbbf24; font-weight: bold; }
+
+.input-text {
+  color: var(--primary);
+}
+
+.output-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.terminal-input-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.prompt {
+  color: var(--primary);
+  font-weight: bold;
+}
+
+.terminal-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.cursor {
+  color: var(--primary);
+  opacity: 0;
+}
+
+.cursor.visible {
+  opacity: 1;
+  animation: blink 0.5s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.terminal-footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  background: rgba(26, 31, 46, 0.5);
+  border-top: 1px solid rgba(0, 212, 255, 0.1);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+@media (max-width: 768px) {
+  .terminal-body {
+    min-height: 250px;
+    max-height: 350px;
+  }
+  
+  .terminal-footer {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}

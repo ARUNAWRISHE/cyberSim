@@ -1,12 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import "../App.css";
-import "../labs.css";
 
 export default function IncidentResponseLab({ onClose }) {
   const [input, setInput] = useState("");
   const [outputs, setOutputs] = useState([]);
   const [currentPhase, setCurrentPhase] = useState(0);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [_isProcessing, setIsProcessing] = useState(false);
   const [cursorVisible, setCursorVisible] = useState(true);
   const [booted, setBooted] = useState(false);
   const [incidentData, setIncidentData] = useState({
@@ -265,7 +264,7 @@ export default function IncidentResponseLab({ onClose }) {
       setBooted(true);
     };
     boot();
-  }, [booted]);
+  }, [booted, pushOut]);
 
   const computeProgress = () => {
     const completed = Object.values(phaseStatus).filter(Boolean).length;

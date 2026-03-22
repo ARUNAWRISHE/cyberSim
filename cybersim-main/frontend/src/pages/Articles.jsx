@@ -19,7 +19,7 @@ export default function Articles() {
         const response = await articlesAPI.getArticles();
         
         // Handle both direct array and object with articles property
-        const articlesData = Array.isArray(response) ? response : response.articles || [];
+        const articlesData = Array.isArray(response.data) ? response.data : response.data?.articles || [];
         
         setArticles(articlesData);
         setFilteredArticles(articlesData);
@@ -234,17 +234,6 @@ export default function Articles() {
     setFilteredArticles(filtered);
   }, [articles, selectedCategory, selectedDifficulty, searchTerm]);
 
-  const getCategoryIcon = (category) => {
-    const icons = {
-      attack: '⚔️',
-      defense: '🛡️',
-      cloud: '☁️',
-      tools: '🔧',
-      fundamentals: '📚'
-    };
-    return icons[category] || '📄';
-  };
-
   const getDifficultyColor = (difficulty) => {
     const colors = {
       beginner: '#0066FF',
@@ -252,14 +241,6 @@ export default function Articles() {
       advanced: '#FF4757'
     };
     return colors[difficulty] || '#8892B0';
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
   };
 
   if (loading) {

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
 import '../App.css'
-import '../labs.css'
 
 // XSS Lab - Safe, client-side simulation only
 const DEMO_FLAG = 'flag{xss_lab_complete}'

@@ -1,12 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import "../App.css";
-import "../labs.css";
 
 export default function NetworkSecurityLab({ onClose }) {
   const [input, setInput] = useState("");
   const [outputs, setOutputs] = useState([]);
-  const [history, setHistory] = useState([]);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [_history, setHistory] = useState([]);
+  const [_isProcessing, setIsProcessing] = useState(false);
   const [cursorVisible, setCursorVisible] = useState(true);
   const [booted, setBooted] = useState(false);
 
@@ -88,7 +87,7 @@ export default function NetworkSecurityLab({ onClose }) {
     },
     {
       match: (cmd) => /^(netstat|ss)/.test(cmd),
-      run: async (cmd) => {
+      run: async () => {
         await pushOut("Scanning network connections...");
         await delay(600);
         const ports = ["22/tcp (ssh)", "80/tcp (http)", "443/tcp (https)", "3306/tcp (mysql)"];
@@ -118,7 +117,7 @@ export default function NetworkSecurityLab({ onClose }) {
     },
     {
       match: (cmd) => /^(sudo\s+)?systemctl.*resolved/.test(cmd),
-      run: async (cmd) => {
+      run: async () => {
         await pushOut("Configuring secure DNS settings...");
         await delay(600);
         await pushOut("DNS over HTTPS (DoH) enabled");
@@ -129,7 +128,7 @@ export default function NetworkSecurityLab({ onClose }) {
     },
     {
       match: (cmd) => /^nmap/.test(cmd),
-      run: async (cmd) => {
+      run: async () => {
         await pushOut("Starting Nmap vulnerability scan...");
         await delay(1200);
         await pushOut("Nmap scan report for localhost (127.0.0.1)");
@@ -144,7 +143,7 @@ export default function NetworkSecurityLab({ onClose }) {
     },
     {
       match: (cmd) => /^(tcpdump|wireshark)/.test(cmd),
-      run: async (cmd) => {
+      run: async () => {
         await pushOut("Starting packet capture...");
         await delay(800);
         await pushOut("tcpdump: listening on eth0, link-type EN10MB");
@@ -232,7 +231,7 @@ export default function NetworkSecurityLab({ onClose }) {
       setBooted(true);
     };
     boot();
-  }, [booted]);
+  }, [booted, pushOut]);
 
   return (
     <div style={{ padding: 16, maxWidth: 1200, margin: '0 auto', color: '#fff' }}>

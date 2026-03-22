@@ -22,7 +22,7 @@ export default defineConfig([
         sourceType: 'module',
       },
     },
-    rules: {
+    rules: { 'react-refresh/only-export-components': 'off', 'no-useless-escape': 'off', 
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
   },

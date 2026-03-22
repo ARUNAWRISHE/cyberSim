@@ -5,7 +5,7 @@ export default function LiveChat({ isOpen, onClose }) {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline] = useState(true);
   const [agentName] = useState('CyberSim AI');
   const [useAI] = useState(true); // Try AI API first, fallback to smart local responses
   const messagesEndRef = useRef(null);

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import '../labs.css';
 
 const WebAppTestingLab = ({ onClose }) => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -81,7 +80,7 @@ const WebAppTestingLab = ({ onClose }) => {
       "",
       "Type your command below:"
     ]);
-  }, [currentStep]);
+  }, [currentStep, steps]);
 
   const handleCommand = (command) => {
     const currentStepData = steps[currentStep];

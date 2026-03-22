@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { authAPI } from '../services/api';
 import './Auth.css';
 
 function Signup() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
-    name: '',
+    username: '',
     email: '',
     password: '',
     confirmPassword: ''
@@ -32,19 +35,43 @@ function Signup() {
       return;
     }
 
-    // TODO: Replace with actual API call
-    setTimeout(() => {
-      if (formData.name && formData.email && formData.password) {
-        localStorage.setItem('user', JSON.stringify({ 
-          name: formData.name, 
-          email: formData.email 
-        }));
-        navigate('/learn');
-      } else {
-        setError('Please fill in all fields');
-      }
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
       setLoading(false);
-    }, 1000);
+      return;
+    }
+
+    try {
+      const response = await authAPI.register({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password
+      });
+
+      const userData = {
+        _id: response.data._id,
+        username: response.data.username,
+        email: response.data.email,
+        role: response.data.role,
+        points: response.data.points,
+        streak: 0,
+        achievements: response.data.achievements || []
+      };
+
+      login(userData, response.data.token);
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('Signup error:', err);
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.code === 'ERR_NETWORK') {
+        setError('Cannot connect to server. Please ensure the backend is running.');
+      } else {
+        setError('Registration failed. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -53,21 +80,21 @@ function Signup() {
         <div className="auth-header">
           <div className="auth-icon">🚀</div>
           <h1>Create Account</h1>
-          <p>Start your cybersecurity learning journey today</p>
+          <p>Start your cybersecurity learning journey</p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
-          {error && <div className="message error">{error}</div>}
+          {error && <div className="auth-message error">{error}</div>}
           
           <div className="form-group">
-            <label htmlFor="name">Full Name</label>
+            <label htmlFor="username">Username</label>
             <input
               type="text"
-              id="name"
-              name="name"
-              value={formData.name}
+              id="username"
+              name="username"
+              value={formData.username}
               onChange={handleChange}
-              placeholder="John Doe"
+              placeholder="Choose a username"
               required
             />
           </div>
@@ -93,7 +120,7 @@ function Signup() {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="Create a strong password"
+              placeholder="Create a password (min 6 characters)"
               required
             />
           </div>
@@ -106,7 +133,7 @@ function Signup() {
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
-              placeholder="Re-enter your password"
+              placeholder="Confirm your password"
               required
             />
           </div>
@@ -115,19 +142,6 @@ function Signup() {
             {loading ? 'Creating account...' : 'Create Account'}
           </button>
         </form>
-
-        <div className="auth-divider">
-          <span>or sign up with</span>
-        </div>
-
-        <div className="social-login">
-          <button className="btn social-btn">
-            <span>🔷</span> Google
-          </button>
-          <button className="btn social-btn">
-            <span>⚫</span> GitHub
-          </button>
-        </div>
 
         <div className="auth-switch">
           Already have an account? <Link to="/login" className="link-text">Sign in</Link>

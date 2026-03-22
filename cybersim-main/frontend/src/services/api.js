@@ -1,35 +1,22 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5050/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5050/api';
 
-// Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 });
 
-// Add token to requests if available
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
-// Handle token expiration
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -38,66 +25,54 @@ api.interceptors.response.use(
   }
 );
 
-// Auth API calls
 export const authAPI = {
-  register: async (userData) => {
-    const response = await api.post('/auth/register', userData);
-    return response.data;
-  },
-
-  login: async (credentials) => {
-    const response = await api.post('/auth/login', credentials);
-    return response.data;
-  },
-
-  getProfile: async () => {
-    const response = await api.get('/auth/profile');
-    return response.data;
-  },
-
-  updateProgress: async (progressData) => {
-    const response = await api.post('/auth/progress', progressData);
-    return response.data;
-  }
+  register: (data) => api.post('/auth/register', data),
+  login: (data) => api.post('/auth/login', data),
+  getProfile: () => api.get('/auth/profile'),
+  getLeaderboard: () => api.get('/auth/leaderboard'),
+  updateStreak: () => api.post('/auth/streak'),
 };
 
-// AI API calls
+export const labsAPI = {
+  getAll: (category) => api.get('/labs', { params: category ? { category } : {} }),
+  getBySlug: (slug) => api.get(`/labs/${slug}`),
+  start: (labId) => api.post('/labs/start', { labId }),
+  execute: (data) => api.post('/labs/execute', data),
+  submitFlag: (data) => api.post('/labs/submit', data),
+  getHint: (labId) => api.post('/labs/hint', { labId }),
+  getLogs: (labId) => api.get(`/labs/${labId}/logs`),
+  seed: () => api.post('/labs/seed'),
+};
+
+export const dashboardAPI = {
+  getStats: () => api.get('/dashboard/stats'),
+  getDetailed: () => api.get('/dashboard/detailed'),
+  resetLab: (labId) => api.post('/dashboard/reset', { labId }),
+};
+
 export const aiAPI = {
-  askQuestion: async (question, context) => {
-    const response = await api.post('/ai/ask', { question, context });
-    return response.data;
-  }
+  assist: (data) => api.post('/ai/assist', data),
+  chat: (data) => api.post('/ai/chat', data),
 };
 
-// Articles API calls
 export const articlesAPI = {
-  getArticles: async (params = {}) => {
-    const response = await api.get('/articles', { params });
-    return response.data;
-  },
-
-  getArticleBySlug: async (slug) => {
-    const response = await api.get(`/articles/${slug}`);
-    return response.data;
-  }
+  getAll: (params) => api.get('/articles', { params }),
+  getArticles: () => api.get('/articles'),
+  getBySlug: (slug) => api.get(`/articles/${slug}`),
 };
 
-// Defense API calls
+export const attackAPI = {
+  execute: (data) => api.post('/attack/execute', data),
+  getHint: (labSlug) => api.post('/attack/hint', { labSlug }),
+  getEndpoints: () => api.get('/attack/endpoints'),
+};
+
 export const defenseAPI = {
-  logCommand: async (logData) => {
-    const response = await api.post('/defense/log', logData);
-    return response.data;
-  },
-
-  getStatus: async (userId) => {
-    const response = await api.get(`/defense/status/${userId}`);
-    return response.data;
-  },
-
-  resetProgress: async (userId) => {
-    const response = await api.post('/defense/reset', { userId });
-    return response.data;
-  }
+  getStatus: (labSlug) => api.get(`/defense/status/${labSlug}`),
+  execute: (data) => api.post('/defense/execute', data),
+  complete: (data) => api.post('/defense/complete', data),
+  getInfo: (labSlug) => api.get(`/defense/info/${labSlug}`),
+  getHint: (labSlug) => api.post('/defense/hint', { labSlug }),
 };
 
 export default api;
