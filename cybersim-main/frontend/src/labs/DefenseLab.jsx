@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { attackAPI, defenseAPI, labsAPI } from '../services/api';
 import '../styles/Terminal.css';
@@ -25,19 +25,7 @@ export default function DefenseLab({ onClose }) {
   const inputRef = useRef(null);
   const terminalRef = useRef(null);
 
-  useEffect(() => {
-    loadLab();
-    const timer = setInterval(() => setCursorVisible(v => !v), 500);
-    return () => clearInterval(timer);
-  }, [slug, loadLab]);
-
-  useEffect(() => {
-    if (terminalRef.current) {
-      terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
-    }
-  }, [history]);
-
-  const loadLab = async () => {
+  const loadLab = useCallback(async () => {
     try {
       setLoading(true);
       const labRes = await labsAPI.getBySlug(slug);
@@ -47,9 +35,22 @@ export default function DefenseLab({ onClose }) {
       
       if (statusRes.data.completed) {
         setAttackCompleted(true);
+        setMode('defense');
+      } else {
+        setMode('attack');
       }
 
       await labsAPI.start(labRes.data._id);
+
+      const objectiveLines = statusRes.data.completed
+        ? [
+            { type: 'info', text: '  1. Defense mode unlocked for this lab' },
+            { type: 'info', text: '  2. Deploy at least 2 defenses and submit' }
+          ]
+        : [
+            { type: 'info', text: '  1. Complete the ATTACK phase to exploit the vulnerability' },
+            { type: 'info', text: '  2. Complete the DEFENSE phase to deploy security fixes' }
+          ];
 
       setHistory([
         { type: 'system', text: '╔═══════════════════════════════════════════════════════════╗' },
@@ -65,8 +66,7 @@ export default function DefenseLab({ onClose }) {
         { type: 'info', text: labRes.data.description },
         { type: 'system', text: '' },
         { type: 'system', text: '🎯 OBJECTIVE:' },
-        { type: 'info', text: '  1. Complete the ATTACK phase to exploit the vulnerability' },
-        { type: 'info', text: '  2. Complete the DEFENSE phase to deploy security fixes' },
+        ...objectiveLines,
         { type: 'system', text: '' },
         { type: 'system', text: '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━' },
         { type: 'system', text: '' },
@@ -75,11 +75,23 @@ export default function DefenseLab({ onClose }) {
       ]);
     } catch (err) {
       console.error('Failed to load lab:', err);
-      addToHistory('error', 'Failed to load lab. Please try again.');
+      setHistory(prev => [...prev, { type: 'error', text: 'Failed to load lab. Please try again.' }]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [slug]);
+
+  useEffect(() => {
+    loadLab();
+    const timer = setInterval(() => setCursorVisible(v => !v), 500);
+    return () => clearInterval(timer);
+  }, [loadLab]);
+
+  useEffect(() => {
+    if (terminalRef.current) {
+      terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+    }
+  }, [history]);
 
   const addToHistory = (type, text) => {
     setHistory(prev => [...prev, { type, text, timestamp: new Date() }]);
@@ -313,13 +325,36 @@ export default function DefenseLab({ onClose }) {
           return { confirm: 'DELETE', records: 'ALL' };
         }
         return { command: input };
-      case 'mitm':
-        return { protocol: input.startsWith('http') ? input : `http://${input}` };
+      case 'mitm': {
+        const normalized = input.trim().toLowerCase();
+        if (normalized === 'http' || normalized === 'https') {
+          return { protocol: normalized };
+        }
+        if (normalized.startsWith('http://') || normalized.startsWith('https://')) {
+          return {
+            protocol: normalized.startsWith('http://') ? 'http' : 'https',
+            endpoint: input.trim()
+          };
+        }
+        return { protocol: 'http', endpoint: `http://${input.trim()}` };
+      }
       case 'shared-vulnerability':
         return { service: input };
       default:
         return { raw: input };
     }
+  };
+
+  const handleModeToggle = () => {
+    if (mode === 'attack') {
+      if (!attackCompleted) {
+        addToHistory('warning', '[!] You must complete the attack phase first!');
+        return;
+      }
+      setMode('defense');
+      return;
+    }
+    setMode('attack');
   };
 
   const handleFlagSubmit = async (e) => {
@@ -437,7 +472,7 @@ export default function DefenseLab({ onClose }) {
                 {lab?.title || 'Defense Lab'} - {mode === 'attack' ? 'Attack Phase' : 'Defense Phase'}
               </div>
               <div className="terminal-actions">
-                <button className="terminal-btn mode-btn" onClick={() => setMode(mode === 'attack' ? 'defense' : 'attack')}>
+                <button className="terminal-btn mode-btn" onClick={handleModeToggle}>
                   {mode === 'attack' ? '🛡️ Defense' : '⚔️ Attack'}
                 </button>
                 <button className="terminal-btn hint-btn" onClick={() => setShowHint(!showHint)}>

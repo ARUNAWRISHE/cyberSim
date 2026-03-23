@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Terminal from '../components/Terminal';
 import { labsAPI } from '../services/api';
@@ -13,7 +13,7 @@ export default function SQLInjectionLab({ onClose }) {
   const [password, setPassword] = useState('');
   const [flag, setFlag] = useState('');
   const [showFlag, setShowFlag] = useState(false);
-  const [history, setHistory] = useState([
+  const [_history, setHistory] = useState([
     { type: 'system', text: '🔓 SQL INJECTION LAB' },
     { type: 'system', text: '═══════════════════════════════════════' },
     { type: 'system', text: 'Mission: Bypass the login form using SQL injection' },
@@ -28,11 +28,7 @@ export default function SQLInjectionLab({ onClose }) {
   ]);
   const [currentHint, setCurrentHint] = useState(0);
 
-  useEffect(() => {
-    loadLab();
-  }, [slug, loadLab]);
-
-  const loadLab = async () => {
+  const loadLab = useCallback(async () => {
     try {
       setLoading(true);
       const labData = await labsAPI.getBySlug(slug || 'sql-injection');
@@ -42,14 +38,16 @@ export default function SQLInjectionLab({ onClose }) {
       const progressData = await labsAPI.getLogs(labData.data._id);
       
       if (progressData.data.length > 0) {
-        const initialHistory = [...history];
-        progressData.data.slice(0, 5).forEach(log => {
-          initialHistory.push({
-            type: log.success ? 'success' : 'input',
-            text: `[${new Date(log.timestamp).toLocaleTimeString()}] ${log.input}`
+        setHistory(prev => {
+          const initialHistory = [...prev];
+          progressData.data.slice(0, 5).forEach(log => {
+            initialHistory.push({
+              type: log.success ? 'success' : 'input',
+              text: `[${new Date(log.timestamp).toLocaleTimeString()}] ${log.input}`
+            });
           });
+          return initialHistory;
         });
-        setHistory(initialHistory);
       }
     } catch (err) {
       console.error('Failed to load lab:', err);
@@ -57,7 +55,11 @@ export default function SQLInjectionLab({ onClose }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [slug]);
+
+  useEffect(() => {
+    loadLab();
+  }, [loadLab]);
 
   const addToHistory = (type, text) => {
     setHistory(prev => [...prev, { type, text }]);
@@ -115,6 +117,7 @@ export default function SQLInjectionLab({ onClose }) {
 
   const handleCommand = (cmd, addFn) => {
     const command = cmd.toLowerCase().trim();
+    const availableHints = lab?.hints || [];
     
     if (command === 'help') {
       addFn('system', 'Available commands: help, clear, hint, login');
@@ -127,17 +130,12 @@ export default function SQLInjectionLab({ onClose }) {
     }
     
     if (command === 'hint') {
-      if (currentHint < lab.hints.length) {
-        addFn('hint', `💡 Hint: ${lab.hints[currentHint]}`);
+      if (currentHint < availableHints.length) {
+        addFn('hint', `💡 Hint: ${availableHints[currentHint]}`);
         setCurrentHint(prev => prev + 1);
       } else {
         addFn('warning', 'No more hints available!');
       }
-      return;
-    }
-
-    if (command === 'clear') {
-      setHistory([]);
       return;
     }
 

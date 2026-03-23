@@ -1,6 +1,24 @@
 import Log from "../models/Log.js";
 import Progress from "../models/Progress.js";
 import User from "../models/User.js";
+import Lab from "../models/Lab.js";
+
+const DEFENSE_SLUG_ALIASES = {
+  "cloud-data-protection": "data-breach",
+  "rate-limiting-defense": "account-hijacking",
+  "access-control-fix": "misconfiguration",
+  "ddos-protection": "ddos",
+  "secure-file-upload": "malware-injection",
+  "data-classification": "insider-threat",
+  "api-security-hardening": "api-attack",
+  "backup-strategy": "data-loss",
+  "tls-configuration": "mitm",
+  "container-isolation": "shared-vulnerability",
+  "secure-sql": "api-attack",
+  "xss-defense": "api-attack"
+};
+
+const resolveDefenseSlug = (labSlug) => DEFENSE_SLUG_ALIASES[labSlug] || labSlug;
 
 const defenseStrategies = {
   "data-breach": {
@@ -16,7 +34,7 @@ const defenseStrategies = {
   "misconfiguration": {
     name: "Role-Based Access Control (RBAC)",
     description: "Implement proper role-based access control for all admin routes",
-    actions: ["rbac", "validate", "audit", " harden"]
+    actions: ["rbac", "validate", "audit", "harden"]
   },
   "ddos": {
     name: "Rate Limiting & DDoS Protection",
@@ -57,30 +75,35 @@ const defenseStrategies = {
 
 export const checkAttackCompleted = async (req, res) => {
   try {
-    const { labSlug } = req.params;
+    const { labSlug: requestedSlug } = req.params;
     const userId = req.user._id;
+    const canonicalSlug = resolveDefenseSlug(requestedSlug);
+    const lab = await Lab.findOne({ slug: requestedSlug }).select("_id category");
 
-    const progress = await Progress.findOne({ userId });
-    
-    if (!progress || !progress.completedLabs) {
-      return res.json({ completed: false, message: "Attack phase not completed" });
+    if (!lab) {
+      return res.status(404).json({ completed: false, message: "Lab not found" });
     }
 
-    const labCompleted = progress.completedLabs.find(
-      lab => lab.labId === labSlug && lab.phase === 'attack'
-    );
-
-    if (!labCompleted) {
-      return res.json({ 
-        completed: false, 
-        message: "You must complete the attack phase before defending" 
+    // Defense-category labs can enter defense mode directly.
+    if (lab.category === "defense") {
+      return res.json({
+        completed: true,
+        canDefend: true,
+        labSlug: canonicalSlug,
+        message: "Defense lab ready"
       });
     }
 
-    return res.json({ 
-      completed: true, 
-      flag: labCompleted.flag,
-      canDefend: true 
+    const progress = await Progress.findOne({ userId, labId: lab._id });
+    const completed = Boolean(progress && progress.status === "completed");
+
+    return res.json({
+      completed,
+      canDefend: completed,
+      labSlug: canonicalSlug,
+      message: completed
+        ? "Attack phase completed"
+        : "You must complete the attack phase before defending"
     });
   } catch (error) {
     console.error("Check attack status error:", error);
@@ -90,31 +113,28 @@ export const checkAttackCompleted = async (req, res) => {
 
 export const executeDefense = async (req, res) => {
   try {
-    const { labSlug, action, parameters } = req.body;
+    const { labSlug: requestedSlug, action, parameters } = req.body;
     const userId = req.user._id;
+    const canonicalSlug = resolveDefenseSlug(requestedSlug);
+    const lab = await Lab.findOne({ slug: requestedSlug }).select("_id category");
 
-    const progress = await Progress.findOne({ userId });
-    if (!progress || !progress.completedLabs) {
-      return res.status(400).json({ 
-        success: false, 
-        output: "You must complete the attack phase first!" 
-      });
+    if (!lab) {
+      return res.status(404).json({ success: false, output: "Lab not found" });
     }
 
-    const attackCompleted = progress.completedLabs.find(
-      lab => lab.labId === labSlug && lab.phase === 'attack'
-    );
-
-    if (!attackCompleted) {
-      return res.status(400).json({ 
-        success: false, 
-        output: "You must complete the attack phase before defending!" 
-      });
+    if (lab.category !== "defense") {
+      const progress = await Progress.findOne({ userId, labId: lab._id });
+      if (!progress || progress.status !== "completed") {
+        return res.status(400).json({
+          success: false,
+          output: "You must complete the attack phase before defending!"
+        });
+      }
     }
 
     let result = { success: false, output: "", defenseDeployed: null };
 
-    switch (labSlug) {
+    switch (canonicalSlug) {
       case "data-breach":
         result = handleDataBreachDefense(userId, action, parameters);
         break;
@@ -151,9 +171,9 @@ export const executeDefense = async (req, res) => {
 
     await Log.create({
       userId,
-      labId: labSlug,
+      labId: lab._id,
       action: "defense",
-      input: JSON.stringify({ action, parameters }),
+      input: JSON.stringify({ action, parameters, labSlug: requestedSlug }),
       output: JSON.stringify(result),
       success: result.success
     });
@@ -607,8 +627,14 @@ function handleSharedVulnerabilityDefense(userId, action, parameters) {
 
 export const completeDefense = async (req, res) => {
   try {
-    const { labSlug, defensesDeployed } = req.body;
+    const { labSlug: requestedSlug, defensesDeployed } = req.body;
     const userId = req.user._id;
+    const canonicalSlug = resolveDefenseSlug(requestedSlug);
+    const lab = await Lab.findOne({ slug: requestedSlug }).select("_id category");
+
+    if (!lab) {
+      return res.status(404).json({ success: false, message: "Lab not found" });
+    }
 
     const minDefenses = 2;
     if (!defensesDeployed || defensesDeployed.length < minDefenses) {
@@ -619,29 +645,27 @@ export const completeDefense = async (req, res) => {
       });
     }
 
-    const progress = await Progress.findOne({ userId });
+    let progress = await Progress.findOne({ userId, labId: lab._id });
     if (!progress) {
-      return res.status(404).json({ success: false, message: "Progress not found" });
+      progress = await Progress.create({
+        userId,
+        labId: lab._id,
+        status: "in-progress",
+        startedAt: new Date()
+      });
     }
 
-    const existingDefense = progress.completedLabs?.find(
-      lab => lab.labId === labSlug && lab.phase === 'defense'
-    );
-
-    if (existingDefense) {
+    if (lab.category === "defense" && progress.status === "completed") {
+      const user = await User.findById(userId).select("points");
       return res.json({
         success: true,
         output: `[+] Defense phase already completed for this lab!`,
         message: "Already completed",
-        defenses: existingDefense.defenses
+        totalPoints: user?.points || 0
       });
     }
 
-    const attackLab = progress.completedLabs?.find(
-      lab => lab.labId === labSlug && lab.phase === 'attack'
-    );
-
-    if (!attackLab) {
+    if (lab.category !== "defense" && progress.status !== "completed") {
       return res.status(400).json({
         success: false,
         message: "You must complete the attack phase first!"
@@ -649,21 +673,11 @@ export const completeDefense = async (req, res) => {
     }
 
     const pointsEarned = defensesDeployed.length * 25;
-    const defenseFlag = `defense_${labSlug}_${defensesDeployed.length}_layers`;
-
-    if (!progress.completedLabs) {
-      progress.completedLabs = [];
-    }
-
-    progress.completedLabs.push({
-      labId: labSlug,
-      phase: 'defense',
-      defenses: defensesDeployed,
-      flag: defenseFlag,
-      completedAt: new Date()
-    });
-
-    progress.totalPoints = (progress.totalPoints || 0) + pointsEarned;
+    const defenseFlag = `defense_${canonicalSlug}_${defensesDeployed.length}_layers`;
+    progress.status = "completed";
+    progress.completedAt = new Date();
+    progress.lastAttempt = new Date();
+    progress.score = Math.max(progress.score || 0, pointsEarned);
     await progress.save();
 
     const user = await User.findById(userId);
@@ -671,6 +685,15 @@ export const completeDefense = async (req, res) => {
       user.points = (user.points || 0) + pointsEarned;
       await user.save();
     }
+
+    await Log.create({
+      userId,
+      labId: lab._id,
+      action: "defense",
+      input: JSON.stringify({ action: "complete", defensesDeployed, labSlug: requestedSlug }),
+      output: JSON.stringify({ defenseFlag, pointsEarned }),
+      success: true
+    });
 
     res.json({
       success: true,
@@ -682,7 +705,7 @@ export const completeDefense = async (req, res) => {
       message: "Defense phase completed!",
       pointsEarned,
       defenseFlag,
-      totalPoints: progress.totalPoints
+      totalPoints: user?.points || 0
     });
   } catch (error) {
     console.error("Complete defense error:", error);
@@ -691,7 +714,8 @@ export const completeDefense = async (req, res) => {
 };
 
 export const getDefenseHint = async (req, res) => {
-  const { labSlug } = req.body;
+  const { labSlug: requestedSlug } = req.body;
+  const labSlug = resolveDefenseSlug(requestedSlug);
 
   const hints = {
     "data-breach": [
@@ -748,14 +772,15 @@ export const getDefenseHint = async (req, res) => {
 
   res.json({
     hint: hints[labSlug]?.[0] || "No hint available",
-    labSlug,
+    labSlug: requestedSlug,
+    canonicalLabSlug: labSlug,
     availableActions: defenseStrategies[labSlug]?.actions || []
   });
 };
 
 export const getDefenseInfo = async (req, res) => {
-  const { labSlug } = req.params;
-
+  const { labSlug: requestedSlug } = req.params;
+  const labSlug = resolveDefenseSlug(requestedSlug);
   const strategy = defenseStrategies[labSlug];
 
   if (!strategy) {
@@ -763,7 +788,8 @@ export const getDefenseInfo = async (req, res) => {
   }
 
   res.json({
-    labSlug,
+    labSlug: requestedSlug,
+    canonicalLabSlug: labSlug,
     name: strategy.name,
     description: strategy.description,
     actions: strategy.actions

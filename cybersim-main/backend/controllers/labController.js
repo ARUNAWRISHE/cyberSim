@@ -50,7 +50,8 @@ export const startLab = async (req, res) => {
         startedAt: new Date()
       });
     } else if (progress.status === "completed") {
-      return res.status(400).json({ message: "Lab already completed", progress });
+      // Allow reopening a completed lab without resetting earned score.
+      return res.json(progress);
     } else {
       progress.status = "in-progress";
       progress.startedAt = new Date();

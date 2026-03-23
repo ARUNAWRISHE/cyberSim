@@ -6,6 +6,7 @@ import LiveBackground from './components/LiveBackground';
 import ChatButton from './components/ChatButton';
 import AttackLab from './labs/AttackLab';
 import DefenseLab from './labs/DefenseLab';
+import SQLInjectionLab from './labs/SQLInjectionLab';
 import Landing from './pages/Landing';
 import Learn from './pages/Learn';
 import Login from './pages/Login';
@@ -48,6 +49,11 @@ function LabRouter() {
     );
   }
   
+  // Keep SQLi on its specialized flow that uses /labs/execute.
+  if (slug === 'sql-injection') {
+    return <SQLInjectionLab />;
+  }
+
   return labType === 'defense' ? <DefenseLab /> : <AttackLab />;
 }
 

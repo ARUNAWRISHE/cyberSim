@@ -1,7 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { attackAPI, labsAPI } from '../services/api';
 import '../styles/Terminal.css';
+
+const ATTACK_API_LABS = new Set([
+  'data-breach',
+  'account-hijacking',
+  'misconfiguration',
+  'ddos',
+  'malware-injection',
+  'insider-threat',
+  'api-attack',
+  'data-loss',
+  'mitm',
+  'shared-vulnerability'
+]);
 
 export default function AttackLab({ onClose }) {
   const { slug } = useParams();
@@ -21,19 +34,9 @@ export default function AttackLab({ onClose }) {
   const inputRef = useRef(null);
   const terminalRef = useRef(null);
 
-  useEffect(() => {
-    loadLab();
-    const timer = setInterval(() => setCursorVisible(v => !v), 500);
-    return () => clearInterval(timer);
-  }, [slug, loadLab]);
+  const isAttackApiLab = ATTACK_API_LABS.has(slug);
 
-  useEffect(() => {
-    if (terminalRef.current) {
-      terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
-    }
-  }, [history]);
-
-  const loadLab = async () => {
+  const loadLab = useCallback(async () => {
     try {
       setLoading(true);
       const labRes = await labsAPI.getBySlug(slug);
@@ -65,11 +68,23 @@ export default function AttackLab({ onClose }) {
       ]);
     } catch (err) {
       console.error('Failed to load lab:', err);
-      addToHistory('error', 'Failed to load lab. Please try again.');
+      setHistory(prev => [...prev, { type: 'error', text: 'Failed to load lab. Please try again.' }]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [slug]);
+
+  useEffect(() => {
+    loadLab();
+    const timer = setInterval(() => setCursorVisible(v => !v), 500);
+    return () => clearInterval(timer);
+  }, [loadLab]);
+
+  useEffect(() => {
+    if (terminalRef.current) {
+      terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+    }
+  }, [history]);
 
   const addToHistory = (type, text) => {
     setHistory(prev => [...prev, { type, text, timestamp: new Date() }]);
@@ -114,9 +129,17 @@ export default function AttackLab({ onClose }) {
     if (cmd === 'hint') {
       setShowHint(true);
       try {
-        const res = await attackAPI.getHint(slug);
-        setHint(res.data.hint);
-        addToHistory('warning', `💡 Hint: ${res.data.hint}`);
+        if (isAttackApiLab) {
+          const res = await attackAPI.getHint(slug);
+          setHint(res.data.hint);
+          addToHistory('warning', `💡 Hint: ${res.data.hint}`);
+        } else if (lab?._id) {
+          const res = await labsAPI.getHint(lab._id);
+          setHint(res.data.hint);
+          addToHistory('warning', `💡 Hint: ${res.data.hint}`);
+        } else {
+          addToHistory('warning', '💡 Hint: Try exploring the vulnerability more carefully.');
+        }
       } catch {
         addToHistory('warning', '💡 Hint: Try exploring the vulnerability more carefully.');
       }
@@ -145,12 +168,25 @@ export default function AttackLab({ onClose }) {
     addToHistory('system', '[*] Executing attack...');
 
     try {
-      const payload = parsePayload(slug, input);
-      const res = await attackAPI.execute({
-        labSlug: slug,
-        payload,
-        action: 'attack'
-      });
+      let res;
+
+      if (isAttackApiLab) {
+        const payload = parsePayload(slug, input);
+        res = await attackAPI.execute({
+          labSlug: slug,
+          payload,
+          action: 'attack'
+        });
+      } else {
+        if (!lab?._id) {
+          throw new Error('Lab is not initialized yet.');
+        }
+        res = await labsAPI.execute({
+          labId: lab._id,
+          input,
+          action: 'attack'
+        });
+      }
 
       const result = res.data;
 
@@ -209,8 +245,19 @@ export default function AttackLab({ onClose }) {
           return { confirm: 'DELETE', records: 'ALL' };
         }
         return { command: input };
-      case 'mitm':
-        return { protocol: input.startsWith('http') ? input : `http://${input}` };
+      case 'mitm': {
+        const normalized = input.trim().toLowerCase();
+        if (normalized === 'http' || normalized === 'https') {
+          return { protocol: normalized };
+        }
+        if (normalized.startsWith('http://') || normalized.startsWith('https://')) {
+          return {
+            protocol: normalized.startsWith('http://') ? 'http' : 'https',
+            endpoint: input.trim()
+          };
+        }
+        return { protocol: 'http', endpoint: `http://${input.trim()}` };
+      }
       case 'shared-vulnerability':
         return { service: input };
       default:

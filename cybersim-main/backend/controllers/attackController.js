@@ -34,6 +34,11 @@ export const executeAttack = async (req, res) => {
   try {
     const { labSlug, payload, action } = req.body;
     const userId = req.user._id;
+    const lab = await Lab.findOne({ slug: labSlug }).select("_id");
+
+    if (!lab) {
+      return res.status(404).json({ success: false, output: "Lab not found" });
+    }
 
     let result = { success: false, output: "", flag: null };
 
@@ -74,7 +79,7 @@ export const executeAttack = async (req, res) => {
 
     await Log.create({
       userId,
-      labId: labSlug,
+      labId: lab._id,
       action: action || "attack",
       input: JSON.stringify(payload),
       output: JSON.stringify(result),
