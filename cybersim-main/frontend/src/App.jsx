@@ -16,6 +16,15 @@ import Profile from './pages/Profile';
 import Articles from './pages/Articles';
 import ArticleView from './pages/ArticleView';
 import Support from './pages/Support';
+import SystemHardeningLab from './defense/system-hardening';
+import NetworkSecurityLab from './defense/network-security';
+import IncidentResponseLab from './defense/incident-response';
+import WebAppTestingLab from './defense/web-app-testing';
+import MalwareAnalysisLab from './defense/malware-analysis';
+import LogMonitoringSIEMLab from './defense/log-monitoring-siem';
+import RansomwareContainmentLab from './defense/ransomware-containment';
+import ThreatHuntingEDRLab from './defense/threat-hunting-edr';
+import IAMHardeningLab from './defense/iam-hardening';
 
 function LabRouter() {
   const { slug } = useParams();
@@ -55,6 +64,41 @@ function LabRouter() {
   }
 
   return labType === 'defense' ? <DefenseLab /> : <AttackLab />;
+}
+
+function DefenseSessionRouter() {
+  const { session } = useParams();
+  const navigate = useNavigate();
+
+  const handleClose = () => navigate('/articles');
+
+  const sessions = {
+    'system-hardening': SystemHardeningLab,
+    'network-security': NetworkSecurityLab,
+    'incident-response': IncidentResponseLab,
+    'web-app-testing': WebAppTestingLab,
+    'malware-analysis': MalwareAnalysisLab,
+    'log-monitoring-siem': LogMonitoringSIEMLab,
+    'ransomware-containment': RansomwareContainmentLab,
+    'threat-hunting-edr': ThreatHuntingEDRLab,
+    'iam-hardening': IAMHardeningLab,
+  };
+
+  const SessionComponent = sessions[session];
+
+  if (!SessionComponent) {
+    return (
+      <div className="lab-container">
+        <div className="loading-container" style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+          <h2>Defense session not found</h2>
+          <p>Try one of: system-hardening, network-security, incident-response, web-app-testing, malware-analysis, log-monitoring-siem, ransomware-containment, threat-hunting-edr, iam-hardening</p>
+          <button className="btn primary" onClick={() => navigate('/articles')}>Back to Intel Base</button>
+        </div>
+      </div>
+    );
+  }
+
+  return <SessionComponent onClose={handleClose} />;
 }
 
 function ScrollToTop() {
@@ -215,6 +259,7 @@ function AppContent() {
           <Route path="/support" element={<Support />} />
           <Route path="/learn" element={<Learn />} />
           <Route path="/lab/:slug" element={<LabRouter />} />
+          <Route path="/defense/:session" element={<DefenseSessionRouter />} />
         </Routes>
       </div>
       <ChatButton />

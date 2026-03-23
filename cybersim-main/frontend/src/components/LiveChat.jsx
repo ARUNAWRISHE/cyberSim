@@ -65,7 +65,7 @@ export default function LiveChat({ isOpen, onClose }) {
 
     // Training Labs
     if (lowerMessage.includes('lab') || lowerMessage.includes('training') || lowerMessage.includes('simulation') || lowerMessage.includes('practice')) {
-      return "🧪 Training Labs Help:\n\nWe offer multiple cybersecurity labs:\n\nAttack Labs:\n• SQL Injection\n• Cross-Site Scripting (XSS)\n• Command Injection\n• Directory Traversal\n• Penetration Testing\n\nDefense Labs:\n• System Hardening\n• Network Security\n• Incident Response\n• Web App Testing\n• Malware Analysis\n\nTo start a lab, go to Training Labs in the navigation menu. Which lab interests you?";
+      return "🧪 Training Labs Help:\n\nWe offer multiple cybersecurity labs:\n\nAttack Labs:\n• SQL Injection\n• Cross-Site Scripting (XSS)\n• Command Injection\n• Directory Traversal\n• Penetration Testing\n\nDefense Labs:\n• System Hardening\n• Network Security\n• Incident Response\n• Web App Testing\n• Malware Analysis\n• SOC Log Monitoring and SIEM Triage\n• Ransomware Containment and Recovery\n\nTo start a lab, go to Training Labs in the navigation menu. Which lab interests you?";
     }
 
     // Account Issues
@@ -85,7 +85,7 @@ export default function LiveChat({ isOpen, onClose }) {
 
     // Articles & Learning
     if (lowerMessage.includes('article') || lowerMessage.includes('read') || lowerMessage.includes('intel base')) {
-      return "📚 Intel Base Articles:\n\nAccess our comprehensive knowledge base:\n\nAttack Techniques:\n• SQL Injection fundamentals\n• XSS attack vectors\n• Command injection methods\n• Path traversal exploits\n• Penetration testing methodology\n\nDefense Strategies:\n• System hardening guides\n• Network security best practices\n• Incident response procedures\n• Malware analysis techniques\n\nVisit the Intel Base section to browse all articles!";
+      return "📚 Intel Base Articles:\n\nAccess our comprehensive knowledge base:\n\nAttack Techniques:\n• SQL Injection fundamentals\n• XSS attack vectors\n• Command injection methods\n• Path traversal exploits\n• Penetration testing methodology\n\nDefense Strategies:\n• System hardening guides\n• Network security best practices\n• Incident response procedures\n• Malware analysis techniques\n• SOC monitoring and SIEM triage\n• Ransomware containment and recovery\n\nVisit the Intel Base section to browse all articles!";
     }
 
     // Pricing & Plans

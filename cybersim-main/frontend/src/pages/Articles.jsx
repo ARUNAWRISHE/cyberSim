@@ -183,6 +183,34 @@ export default function Articles() {
             author: "CyberSim Team",
             createdAt: "2024-01-05",
             practiceLink: "/defense/malware-analysis"
+          },
+          {
+            id: 12,
+            title: "SOC Log Monitoring and SIEM Triage",
+            slug: "soc-log-monitoring-siem-triage",
+            category: "defense",
+            difficulty: "intermediate",
+            description: "Learn practical SOC workflows for triaging brute-force and beaconing alerts.",
+            content: "SOC triage combines log analysis, network validation, and targeted containment...",
+            tags: ["siem", "soc", "log-analysis", "detection", "incident-response"],
+            readTime: 13,
+            author: "CyberSim Team",
+            createdAt: "2024-01-04",
+            practiceLink: "/defense/log-monitoring-siem"
+          },
+          {
+            id: 13,
+            title: "Ransomware Containment and Recovery",
+            slug: "ransomware-containment-recovery",
+            category: "defense",
+            difficulty: "advanced",
+            description: "Practice realistic containment, evidence collection, and backup recovery actions.",
+            content: "Ransomware response requires speed, discipline, and recovery planning...",
+            tags: ["ransomware", "containment", "recovery", "forensics", "backup"],
+            readTime: 15,
+            author: "CyberSim Team",
+            createdAt: "2024-01-03",
+            practiceLink: "/defense/ransomware-containment"
           }
         ];
         setArticles(mockArticles);
@@ -241,6 +269,33 @@ export default function Articles() {
       advanced: '#FF4757'
     };
     return colors[difficulty] || '#8892B0';
+  };
+
+  const getPracticeLink = (article) => {
+    if (article.practiceLink) return article.practiceLink;
+
+    const slugToPath = {
+      'intro-sql-injection': '/lab/sql-injection',
+      'xss-fundamentals': '/lab/xss-reflection',
+      'xss-attacks': '/lab/xss-reflection',
+      'command-injection': '/lab/command-injection',
+      'command-injection-attacks': '/lab/command-injection',
+      'directory-traversal': '/lab/directory-traversal',
+      'directory-traversal-vulnerabilities': '/lab/directory-traversal',
+      'penetration-testing-methodology': '/lab/shared-vulnerability',
+      'web-application-security-testing': '/lab/api-attack',
+      'system-hardening-fundamentals': '/defense/system-hardening',
+      'network-security-config': '/defense/network-security',
+      'network-security-monitoring': '/defense/network-security',
+      'incident-response-planning': '/defense/incident-response',
+      'web-app-security-testing': '/defense/web-app-testing',
+      'malware-analysis': '/defense/malware-analysis',
+      'soc-log-monitoring-siem-triage': '/defense/log-monitoring-siem',
+      'ransomware-containment-recovery': '/defense/ransomware-containment'
+    };
+
+    if (slugToPath[article.slug]) return slugToPath[article.slug];
+    return article.category === 'defense' ? '/defense/system-hardening' : '/learn';
   };
 
   if (loading) {
@@ -391,7 +446,7 @@ export default function Articles() {
                     <Link to={`/articles/${article.slug}`} className="btn ghost">
                       Read Article
                     </Link>
-                    <Link to={article.practiceLink} className="btn primary">
+                    <Link to={getPracticeLink(article)} className="btn primary">
                       <span className="practice-icon">🚀</span>
                       Practice Lab
                     </Link>
@@ -461,7 +516,7 @@ export default function Articles() {
                     <Link to={`/articles/${article.slug}`} className="btn ghost">
                       Read Article
                     </Link>
-                    <Link to={article.practiceLink} className="btn primary">
+                    <Link to={getPracticeLink(article)} className="btn primary">
                       <span className="practice-icon">🚀</span>
                       Practice Lab
                     </Link>

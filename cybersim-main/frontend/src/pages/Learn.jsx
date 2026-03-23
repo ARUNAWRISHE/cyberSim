@@ -51,6 +51,44 @@ function Learn() {
   const attackLabs = labs.filter(l => l.category === 'attack');
   const defenseLabs = labs.filter(l => l.category === 'defense');
 
+  const extraDefenseSessions = [
+    {
+      slug: 'log-monitoring-siem',
+      title: 'SOC Log Monitoring and SIEM Triage',
+      description: 'Triage login spikes, confirm beaconing traffic, and apply safe containment controls.',
+      difficulty: 'intermediate',
+      points: 150,
+      type: 'SIEM Triage'
+    },
+    {
+      slug: 'ransomware-containment',
+      title: 'Ransomware Containment and Recovery',
+      description: 'Isolate infected hosts, stop encryption spread, preserve evidence, and recover from backups.',
+      difficulty: 'advanced',
+      points: 160,
+      type: 'Incident Recovery'
+    },
+    {
+      slug: 'threat-hunting-edr',
+      title: 'Threat Hunting with EDR',
+      description: 'Hunt encoded PowerShell activity, pivot through process and network telemetry, and isolate compromised endpoints.',
+      difficulty: 'advanced',
+      points: 150,
+      type: 'EDR Threat Hunt'
+    },
+    {
+      slug: 'iam-hardening',
+      title: 'Identity and Access Hardening',
+      description: 'Audit privileged access, remove risky permissions, enforce MFA, and rotate sensitive credentials.',
+      difficulty: 'intermediate',
+      points: 150,
+      type: 'IAM Security'
+    }
+  ];
+
+  const defenseSlugSet = new Set(defenseLabs.map((lab) => lab.slug));
+  const visibleExtraDefenseSessions = extraDefenseSessions.filter((session) => !defenseSlugSet.has(session.slug));
+
   const getLabIcon = (type) => {
     const icons = {
       'Authentication Bypass': '💉',
@@ -68,7 +106,11 @@ function Learn() {
       'Injection Attack': '💉',
       'Data Deletion': '🗑️',
       'Traffic Interception': '👁️',
-      'Container Escape': '🚢'
+      'Container Escape': '🚢',
+      'SIEM Triage': '📡',
+      'Incident Recovery': '🧯',
+      'EDR Threat Hunt': '🧭',
+      'IAM Security': '🪪'
     };
     return icons[type] || '🎯';
   };
@@ -136,7 +178,7 @@ function Learn() {
           <section style={{ marginBottom: '3rem' }}>
             <div className="section-title">
               <h2>🛡️ Defense Labs</h2>
-              <span className="badge defense">{defenseLabs.length} Available</span>
+              <span className="badge defense">{defenseLabs.length + visibleExtraDefenseSessions.length} Available</span>
             </div>
             <div className="labs-grid">
               {defenseLabs.map((lab) => (
@@ -155,6 +197,28 @@ function Learn() {
                     <div className="lab-footer">
                       <span className="points">+{lab.points} pts</span>
                       <span className="type">{lab.type}</span>
+                    </div>
+                  </div>
+                  <button className="btn primary">Start Defense</button>
+                </div>
+              ))}
+
+              {visibleExtraDefenseSessions.map((session) => (
+                <div
+                  key={session.slug}
+                  className="lab-card defense-card"
+                  onClick={() => navigate(`/defense/${session.slug}`)}
+                >
+                  <div className="lab-icon">{getLabIcon(session.type)}</div>
+                  <div className="lab-content">
+                    <div className="lab-header-row">
+                      <h3>{session.title}</h3>
+                      <span className={`difficulty ${session.difficulty}`}>{session.difficulty}</span>
+                    </div>
+                    <p>{session.description}</p>
+                    <div className="lab-footer">
+                      <span className="points">+{session.points} pts</span>
+                      <span className="type">{session.type}</span>
                     </div>
                   </div>
                   <button className="btn primary">Start Defense</button>

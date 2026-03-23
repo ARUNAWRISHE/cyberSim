@@ -527,6 +527,113 @@ Cloud security requires a shared responsibility model between cloud providers an
     practiceLink: "/defense/network-security"
   },
   {
+    title: "SOC Log Monitoring and SIEM Triage",
+    slug: "soc-log-monitoring-siem-triage",
+    category: "defense",
+    difficulty: "intermediate",
+    description: "Practical SOC workflow for triaging suspicious login and beaconing alerts",
+    content: `# SOC Log Monitoring and SIEM Triage
+
+SOC monitoring is effective when analysts can move quickly from alert validation to safe containment.
+
+## Core Triage Workflow
+
+### 1. Alert Validation
+- Verify source reliability and timestamp alignment
+- Confirm whether detections map to known attack patterns
+- Correlate with recent user activity and service changes
+
+### 2. Scope Determination
+- Identify affected users, hosts, and services
+- Distinguish isolated noise from coordinated behavior
+- Track whether indicators appear in multiple data sources
+
+### 3. Network Verification
+- Confirm suspicious traffic patterns using packet capture
+- Validate destination reputation and protocol usage
+- Record IOC evidence for follow-up hunting
+
+### 4. Containment
+- Block known malicious sources at host or edge firewall
+- Preserve logs and timeline evidence before broad remediation
+- Update IDS/SIEM signatures to prevent repeat blind spots
+
+## Detection Use Cases
+
+- Brute-force authentication campaigns
+- Command and control beaconing
+- Suspicious outbound data flows
+- Privileged account misuse
+
+## Best Practices
+
+1. Use repeatable triage playbooks
+2. Capture evidence before major system changes
+3. Prioritize containment actions with lowest business impact
+4. Feed findings back into detection engineering
+
+## Practice Lab
+
+Apply this workflow in the [SOC Monitoring Lab](/defense/log-monitoring-siem).`,
+    tags: ["soc", "siem", "log-analysis", "detection", "incident-response"],
+    readTime: 13,
+    author: "CyberSim Team",
+    practiceLink: "/defense/log-monitoring-siem"
+  },
+  {
+    title: "Ransomware Containment and Recovery",
+    slug: "ransomware-containment-recovery",
+    category: "defense",
+    difficulty: "advanced",
+    description: "Structured response strategy to contain ransomware and recover safely",
+    content: `# Ransomware Containment and Recovery
+
+Ransomware response must prioritize immediate containment, evidence preservation, and business recovery.
+
+## Incident Priorities
+
+### 1. Immediate Containment
+- Isolate infected hosts from network segments
+- Stop active encryption processes
+- Disable high-risk lateral movement channels (SMB/RDP)
+
+### 2. Evidence Preservation
+- Capture process and network telemetry
+- Preserve ransom note artifacts and IOC hashes
+- Maintain chain-of-custody for forensic integrity
+
+### 3. Recovery Planning
+- Validate immutable backup health
+- Restore critical services in staged order
+- Verify restored data integrity before production cutover
+
+### 4. Post-Incident Hardening
+- Rotate privileged credentials and secrets
+- Patch initial access vector and persistence path
+- Increase monitoring for reinfection signals
+
+## Common Response Mistakes
+
+- Restoring from backups before root-cause containment
+- Wiping hosts too early and losing forensic evidence
+- Re-enabling file shares without strengthened controls
+
+## Readiness Controls
+
+1. Offline and immutable backups
+2. Segmented privileged access
+3. Endpoint detection and response coverage
+4. Tested ransomware response playbooks
+
+## Practice Lab
+
+Practice this workflow in the [Ransomware Recovery Lab](/defense/ransomware-containment).`,
+    tags: ["ransomware", "containment", "recovery", "forensics", "backup"],
+    readTime: 15,
+    author: "CyberSim Team",
+    practiceLink: "/defense/ransomware-containment"
+  },
+  {
     title: "Web Application Security Testing",
     slug: "web-application-security-testing",
     category: "attack",
