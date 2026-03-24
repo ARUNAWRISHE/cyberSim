@@ -6,23 +6,42 @@ import User from "../models/User.js";
 export const getDashboardStats = async (req, res) => {
   try {
     const userId = req.user._id;
+    const [progress, recentLogs, allLabs, user] = await Promise.all([
+      Progress.find({ userId }).populate("labId"),
+      Log.find({ userId }).sort({ timestamp: -1 }).limit(10).populate("labId"),
+      Lab.find().select("_id title category slug"),
+      User.findById(userId).select("points")
+    ]);
 
-    const progress = await Progress.find({ userId }).populate("labId");
-    
-    const completedLabs = progress.filter(p => p.status === "completed");
-    const inProgressLabs = progress.filter(p => p.status === "in-progress");
-    
-    const totalPoints = completedLabs.reduce((sum, p) => sum + p.score, 0);
-    const attackCompleted = completedLabs.filter(p => p.labId?.category === "attack").length;
-    const defenseCompleted = completedLabs.filter(p => p.labId?.category === "defense").length;
-
-    const recentLogs = await Log.find({ userId })
-      .sort({ timestamp: -1 })
-      .limit(10)
-      .populate("labId");
-
-    const allLabs = await Lab.find();
+    const completedLabs = progress.filter((p) => p.status === "completed");
+    const inProgressLabs = progress.filter((p) => p.status === "in-progress");
+    const attackCompleted = completedLabs.filter((p) => p.labId?.category === "attack").length;
+    const defenseCompleted = completedLabs.filter((p) => p.labId?.category === "defense").length;
     const totalLabsAvailable = allLabs.length;
+    const progressPercentage = totalLabsAvailable > 0
+      ? Math.round((completedLabs.length / totalLabsAvailable) * 100)
+      : 0;
+
+    const labTitleById = new Map(allLabs.map((lab) => [String(lab._id), lab.title]));
+    const resolveLabName = (log) => {
+      if (log.labId?.title) return log.labId.title;
+      const directId = log.labId?._id || log.labId;
+      if (directId && labTitleById.has(String(directId))) {
+        return labTitleById.get(String(directId));
+      }
+      try {
+        const parsed = JSON.parse(log.input || "{}");
+        if (parsed?.labSlug) {
+          const match = allLabs.find((lab) => lab.slug === parsed.labSlug);
+          if (match) return match.title;
+        }
+      } catch {
+        // Keep fallback below.
+      }
+      return "Unknown";
+    };
+
+    const totalPoints = user?.points || 0;
 
     const stats = {
       totalLabs: totalLabsAvailable,
@@ -31,10 +50,10 @@ export const getDashboardStats = async (req, res) => {
       attackCompleted,
       defenseCompleted,
       totalPoints,
-      progressPercentage: Math.round((completedLabs.length / totalLabsAvailable) * 100) || 0,
-      recentActivity: recentLogs.map(log => ({
+      progressPercentage,
+      recentActivity: recentLogs.map((log) => ({
         action: log.action,
-        lab: log.labId?.title || "Unknown",
+        lab: resolveLabName(log),
         success: log.success,
         timestamp: log.timestamp
       })),

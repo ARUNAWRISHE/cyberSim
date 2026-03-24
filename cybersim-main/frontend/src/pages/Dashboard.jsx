@@ -93,7 +93,8 @@ export default function Dashboard() {
       'attack': '#ef4444',
       'defense': '#10b981',
       'submit': '#fbbf24',
-      'hint': '#f59e0b'
+      'hint': '#f59e0b',
+      'start': '#3b82f6'
     };
     return colors[action] || '#6b7280';
   };

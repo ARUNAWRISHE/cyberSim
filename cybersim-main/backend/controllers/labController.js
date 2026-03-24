@@ -58,6 +58,15 @@ export const startLab = async (req, res) => {
       await progress.save();
     }
 
+    await Log.create({
+      userId: req.user._id,
+      labId,
+      action: "start",
+      input: "Lab started",
+      output: `Started lab: ${lab.title}`,
+      success: true
+    });
+
     res.json(progress);
   } catch (error) {
     res.status(500).json({ message: error.message });
